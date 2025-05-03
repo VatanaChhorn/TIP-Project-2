@@ -32,6 +32,7 @@ class DDoSPredictor:
         self.scaler_features = self.model_info['scaler_features']
         self.numerical_cols = self.model_info['numerical_cols']
         self.categorical_cols = list(self.feature_info.keys())
+        print(f"Model loaded successfully from {model_path}")
 
     def _preprocess(self, new_X):
         """

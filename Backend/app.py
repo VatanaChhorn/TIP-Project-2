@@ -4,6 +4,7 @@ from flask_jwt_extended import JWTManager
 from config import Config
 from models.user import mongo
 from routes.auth import auth_bp
+from routes.ml_routes import ml_bp
 
 def create_app():
     app = Flask(__name__)
@@ -16,6 +17,7 @@ def create_app():
     
     # Register blueprints
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
+    app.register_blueprint(ml_bp, url_prefix='/api/ml')
     
     return app
 

@@ -24,7 +24,7 @@ class SMSDetector:
     def __init__(self, model_path=None):
         self.vectorizer = CountVectorizer()
         self.tfidf = TfidfTransformer()
-        # self.stopwords_cleaned = self._prepare_stopwords()
+        self.stopwords_cleaned = self._prepare_stopwords()
         
         # Initialize base models
         self.nb_model = MultinomialNB()
@@ -43,12 +43,12 @@ class SMSDetector:
         if model_path and os.path.exists(model_path):
             self.load_model(model_path)
         
-    # def _prepare_stopwords(self):
-    #     """Prepare cleaned stopwords by removing punctuation."""
-    #     nltk.download('stopwords', quiet=True)
-    #     stopwords_list = stopwords.words('english')
-    #     return [word.translate(str.maketrans('', '', string.punctuation)) 
-    #             for word in stopwords_list]
+    def _prepare_stopwords(self):
+        """Prepare cleaned stopwords by removing punctuation."""
+        nltk.download('stopwords', quiet=True)
+        stopwords_list = stopwords.words('english')
+        return [word.translate(str.maketrans('', '', string.punctuation)) 
+                for word in stopwords_list]
 
     def text_preprocess(self, text):
         """Preprocess text by standardizing case, removing punctuation and stopwords."""
@@ -56,18 +56,18 @@ class SMSDetector:
             text = str(text)
         text = text.lower()
         text = text.translate(str.maketrans('', '', string.punctuation))
-        # text = [word for word in text.split() if word.lower() not in self.stopwords_cleaned]
+        text = [word for word in text.split() if word.lower() not in self.stopwords_cleaned]
         return " ".join(text)
 
     def load_and_prepare_data(self):
         """Load and prepare SMS spam dataset."""
         # Load first dataset
-        spam_df = pd.read_csv(Path(__file__).parent / "data/spam.csv", encoding='ISO-8859-1')
+        spam_df = pd.read_csv(Path(__file__).parent / "../data/spam.csv", encoding='ISO-8859-1')
         spam_df = spam_df[['v1', 'v2']]
         spam_df.columns = ['LABEL', 'TEXT']
 
         # Load second dataset
-        more_df = pd.read_csv(Path(__file__).parent / "data/Dataset_5971.csv", encoding='ISO-8859-1')
+        more_df = pd.read_csv(Path(__file__).parent / "../data/Dataset_5971.csv", encoding='ISO-8859-1')
         more_df = more_df[more_df.LABEL != 'ham'].copy()
         more_df['LABEL'] = more_df['LABEL'].str.lower()
         more_df.drop(columns=['URL', 'EMAIL', 'PHONE'], inplace=True)
@@ -170,9 +170,9 @@ def main():
     # Train models
     X_test, y_test = detector.train_models(data)
     
-    # Save the model
-    model_path = SCRIPT_DIR / "models" / "sms_detector_model.pkl"
-    detector.save_model(model_path)
+    # # Save the model
+    # model_path = SCRIPT_DIR / "models" / "sms_detector_model.pkl"
+    # detector.save_model(model_path)
     
     # Example predictions
     test_texts = [
@@ -184,6 +184,9 @@ def main():
         """
         WINNER!!! You've been selected to receive a $900,000 prize reward! 
         To claim, call 09061701461. Code KL341. Valid 12 hours only.
+        """, 
+        """
+        URGENT! You have won a $1000 gift card. Click here to claim now: www.fakesite.com
         """
     ]
     
