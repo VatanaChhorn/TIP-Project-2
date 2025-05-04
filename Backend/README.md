@@ -122,6 +122,15 @@ python view_db.py
 - `POST /api/auth/refresh` - Refresh access token
 - `GET /api/auth/me` - Get current user info
 
+### ML Endpoints
+
+- `POST /api/ml/process` - Process a CSV file for ML detection
+- `GET /api/ml/metrics/<model_type>` - Get metrics images for a specific model type
+  - Supported model types: 'sqli', 'sms', 'ddos'
+  - Returns base64 encoded images of performance metrics
+- `GET /api/ml/metrics` - Get metrics images for all model types
+  - Returns base64 encoded images for all models' performance metrics
+
 ## Testing with Postman
 
 1. **Create a new Collection**:
