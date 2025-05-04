@@ -21,24 +21,37 @@ def main():
             
             if 'error' in result:
                 print(f"\nError: {result['error']}")
-                if 'classification' in result:
-                    print("\nClassification Results:")
-                    print(f"Predicted Attack Type: {result['classification']['prediction']}")
-                    print(f"Confidence: {result['classification']['confidence']}")
-                    print("Probabilities:")
-                    for label, prob in result['classification']['probabilities'].items():
-                        print(f"- {label}: {prob:.2f}")
             else:
-                print(f"\n=== {result['model_name']} ===")
-                print(f"\nFile: {result['text']}")
-                print(f"Prediction: {result['prediction']}")
+                print(f"\nResults saved to: {result['output_file']}")
+                print("\nProcessing Summary:")
+                print("-" * 50)
                 
-                print("\nClassification Results:")
-                print(f"Predicted Attack Type: {result['classification']['prediction']}")
-                print(f"Confidence: {result['classification']['confidence']}")
-                print("Probabilities:")
-                for label, prob in result['classification']['probabilities'].items():
-                    print(f"- {label}: {prob:.2f}")
+                # Count results by model type
+                model_counts = {}
+                for r in result['results']:
+                    model_name = r['model_name']
+                    model_counts[model_name] = model_counts.get(model_name, 0) + 1
+                
+                # Print summary
+                for model_name, count in model_counts.items():
+                    print(f"{model_name}: {count} rows")
+                
+                # Print first few results as example
+                print("\nExample Results (first 3 rows):")
+                print("-" * 50)
+                for r in result['results'][:3]:
+                    print(f"\nRow {r['row_index']}:")
+                    print(f"Model: {r['model_name']}")
+                    print(f"Classification: {r['classification']['prediction']}")
+                    if r['prediction']:
+                        if 'error' in r['prediction']:
+                            print(f"Error: {r['prediction']['error']}")
+                        else:
+                            print(f"Prediction: {r['prediction']['prediction']}")
+                            if 'probabilities' in r['prediction']:
+                                print("Probabilities:")
+                                for label, prob in r['prediction']['probabilities'].items():
+                                    print(f"- {label}: {prob}")
             
         except Exception as e:
             print(f"Error processing file: {str(e)}")

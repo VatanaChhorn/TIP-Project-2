@@ -50,32 +50,49 @@ class MLDetectionSystem:
             except Exception as e:
                 return {"error": f"Error reading CSV file: {str(e)}"}
 
-            classification = self.process_classification(df)
-            attack_type = classification["prediction"].lower()
-
-            result = {}
-            # Then process with the specific model
-            if attack_type == "sqli":
-                result["prediction"] = self.process_sqli_samples(df)
-                model_name = "SQL INJECTION DETECTION"
-            elif attack_type == "phishing":
-                result["prediction"] = self.process_sms_samples(df)
-                model_name = "PHISHING/SMS SCAM DETECTION"
-            elif attack_type == "ddos":
-                result["prediction"] = self.process_ddos_samples(df)
-                model_name = "DDoS ATTACK PREDICTION"
-            else:
-                return {
-                    "error": f"Unknown attack type: {attack_type}",
+            # Process each row individually
+            results = []
+            for idx, row in df.iterrows():
+                # Convert row to string for classification
+                row = row.dropna()
+                text = ",".join(map(str, row))
+                
+                # Get classification for this row
+                classification = self.classifier.predict(text)
+                attack_type = classification["prediction"].lower()
+                
+                # Process with appropriate model based on classification
+                if attack_type == "sqli":
+                    prediction = self.process_sqli_samples(pd.DataFrame([row]))
+                    model_name = "SQL INJECTION DETECTION"
+                elif attack_type == "phishing":
+                    prediction = self.process_sms_samples(pd.DataFrame([row]))
+                    model_name = "PHISHING/SMS SCAM DETECTION"
+                elif attack_type == "ddos":
+                    prediction = self.process_ddos_samples(pd.DataFrame([row]))
+                    model_name = "DDoS ATTACK PREDICTION"
+                else:
+                    prediction = [{"error": f"Unknown attack type: {attack_type}"}]
+                    model_name = "UNKNOWN"
+                
+                # Add result for this row
+                results.append({
+                    "row_index": idx,
                     "classification": classification,
-                }
-        
-            # Add classification info to the result
-            result["classification"] = classification
-            result["model_name"] = model_name
-            result["text"] = filePath  # Store the file path instead of the text content
-
-            return result
+                    "model_name": model_name,
+                    "prediction": prediction[0] if prediction else None
+                })
+            
+            # Save results to CSV
+            output_df = pd.DataFrame(results)
+            output_path = str(Path(filePath).parent / "detection_results.csv")
+            output_df.to_csv(output_path, index=False)
+            
+            print(results)
+            return {
+                "results": results,
+                "output_file": output_path
+            }
 
         except Exception as e:
             return {"error": f"Error processing file: {str(e)}"}
