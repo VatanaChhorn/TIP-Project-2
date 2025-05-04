@@ -83,14 +83,28 @@ class DDoSPredictor:
         Returns:
         --------
         predictions_df : DataFrame
-            DataFrame with predictions
+            DataFrame with predictions and probabilities
         """
         new_X_scaled = self._preprocess(data)
         predictions = self.voting_clf.predict(new_X_scaled)
         predictions_labels = self.label_encoder.inverse_transform(predictions)
-
+        
+        # Get prediction probabilities
+        probabilities = self.voting_clf.predict_proba(new_X_scaled)
+        
+        # Calculate probabilities for each row
+        benign_probs = []
+        ddos_probs = []
+        for prob in probabilities:
+            benign_idx = list(self.label_encoder.classes_).index('BENIGN')
+            benign_prob = float(prob[benign_idx])
+            benign_probs.append(benign_prob)
+            ddos_probs.append(1 - benign_prob)
+        
         results = pd.DataFrame({
-            'Predicted': predictions_labels
+            'Predicted': predictions_labels,
+            'BENIGN_Probability': benign_probs,
+            'DDoS_Probability': ddos_probs
         })
 
         return results

@@ -72,7 +72,7 @@ class MLDetectionSystem:
                     if prediction and 'probabilities' in prediction[0]:
                         prob = prediction[0]['probabilities'].get('malicious', 0)
                         if 0.4 <= prob <= 0.6:
-                            prediction[0]['prediction'] = "⚠️ Potential Malicious Message"
+                            prediction[0]['prediction'] = "Potential Malicious Message"
                 elif attack_type == "ddos":
                     prediction = self.process_ddos_samples(pd.DataFrame([row]))
                     model_name = "DDoS ATTACK PREDICTION"
@@ -199,18 +199,24 @@ class MLDetectionSystem:
             predictions = predictions.reset_index(drop=True)
             
             # Add predictions as a new column to the original DataFrame
-            cleaned_df['prediction'] = predictions
+            cleaned_df['prediction'] = predictions['Predicted']
+            cleaned_df['benign_probability'] = predictions['BENIGN_Probability']
+            cleaned_df['ddos_probability'] = predictions['DDoS_Probability']
             
             print("Final DataFrame with predictions:")
-            print(cleaned_df[['Flow ID', 'prediction']].tail())
+            print(cleaned_df[['Flow ID', 'prediction', 'benign_probability', 'ddos_probability']].tail())
             
             # Convert DataFrame to list of dictionaries with predictions
             results = []
             for idx, row in cleaned_df.iterrows():
-                input_data = {col: str(val) for col, val in row.items()}
+                input_data = {col: str(val) for col, val in row.items() if col not in ['prediction', 'benign_probability', 'ddos_probability']}
                 result = {
                     "input": input_data,
                     "prediction": row['prediction'],
+                    "probabilities": {
+                        "safe": float(row['benign_probability']),
+                        "malicious": float(row['ddos_probability'])
+                    },
                     "predicted_label": "ddos"
                 }
                 results.append(result)
