@@ -1,0 +1,16 @@
+name: ml_detection_env
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.9
+  - numpy
+  - pandas
+  - scikit-learn
+  - joblib
+  - nltk
+  - matplotlib
+  - pip
+  - pip:
+    - tensorflow
+    - keras 
