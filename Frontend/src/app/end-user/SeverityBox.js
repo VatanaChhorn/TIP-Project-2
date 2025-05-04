@@ -6,7 +6,6 @@ const severityConfig = {
     color: "#5fd17a",
     label: "Low Risk",
     description: "This content is likely to be classified as ham.",
-    probabilityText: (p) => `This content is ${Math.round(p * 100)}% likely to be classified as ham.`,
     indicator: [
       { color: "#ef4444", label: "High" },
       { color: "#fde047", label: "Medium" },
@@ -17,7 +16,6 @@ const severityConfig = {
     color: "#fde047",
     label: "Medium Risk",
     description: "This content may be suspicious.",
-    probabilityText: (p) => `This content is ${Math.round(p * 100)}% likely to be classified as suspicious.`,
     indicator: [
       { color: "#ef4444", label: "High" },
       { color: "#fde047", label: "Medium" },
@@ -28,7 +26,6 @@ const severityConfig = {
     color: "#ef4444",
     label: "High Risk",
     description: "This content is likely to be malicious attack.",
-    probabilityText: (p) => `This content is ${Math.round(p * 100)}% likely to be classified as malicious attack.`,
     indicator: [
       { color: "#ef4444", label: "High" },
       { color: "#fde047", label: "Medium" },
@@ -37,51 +34,13 @@ const severityConfig = {
   },
 };
 
-function SeverityBox({ severity = "high", probability = 0.7, endpoint, classification = "Phishing", children }) {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    if (!endpoint) return;
-    setLoading(true);
-    setError(null);
-    fetch(endpoint)
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch severity data");
-        return res.json();
-      })
-      .then((json) => {
-        setData(json);
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message);
-        setLoading(false);
-      });
-  }, [endpoint]);
-
+function SeverityBox({ severity = "high", probability = 0.7, classification = "Phishing", children }) {
   // Use fetched data if available, otherwise use props
   const effectiveSeverity = severity;
   const effectiveProbability = probability;
   const effectiveClassification = classification ;
   const mappedSeverity = probability > 0.8 ? "high" : probability > 0.4 ? "medium" : "low";
   const config = severityConfig[mappedSeverity]
-
-  if (loading) {
-    return (
-      <Paper elevation={0} sx={{ borderRadius: 3, p: 3, mb: 3, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <CircularProgress />
-      </Paper>
-    );
-  }
-  if (error) {
-    return (
-      <Paper elevation={0} sx={{ borderRadius: 3, p: 3, mb: 3 }}>
-        <Alert severity="error">{error}</Alert>
-      </Paper>
-    );
-  }
 
   return (
     <Paper
@@ -104,7 +63,7 @@ function SeverityBox({ severity = "high", probability = 0.7, endpoint, classific
       <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
         Threat Level: <Box component="span" sx={{ fontWeight: 900 }}>{config.label}</Box>
       </Typography>
-      <Typography sx={{ mb: 1 }}>{config.probabilityText(effectiveProbability)}</Typography>
+      <Typography sx={{ mb: 1 }}>This content is {Math.round(effectiveProbability * 100)}% likely to be classified as malicious attack.</Typography>
 
       {/* Risk Indicator */}
       <Paper
