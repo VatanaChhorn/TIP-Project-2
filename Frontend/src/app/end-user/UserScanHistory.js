@@ -13,7 +13,7 @@ import {
   Chip,
 } from "@mui/material";
 import Navbar from "../Navbar";
-import AdminNavbar from "./AdminNavbar";
+import AdminNavbar from "../admin-user/AdminNavbar";
 
 const scanResults = [
   {

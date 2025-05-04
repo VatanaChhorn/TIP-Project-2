@@ -57,7 +57,7 @@ brew services stop mongodb-community
 brew services list | grep mongodb
 ```
 
-### Option 2: Docker MongoDB
+### Option 2: Docker MongoDB skip
 ```bash
 # Pull MongoDB image
 docker pull mongo
@@ -72,7 +72,7 @@ docker stop mongodb
 docker start mongodb
 ```
 
-### Option 3: MongoDB Atlas (Cloud)
+### Option 3: MongoDB Atlas (Cloud)  skip
 1. Create a free account at [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
 2. Create a new cluster
 3. Get your connection string and update `.env`:
