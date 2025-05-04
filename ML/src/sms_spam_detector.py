@@ -310,7 +310,7 @@ class SMSDetector:
             self.metrics['y_prob'].append(probabilities[1])
         
         # Determine result
-        result = "🚨 Malicious Message" if prediction == 1 else "✅ Safe Message"
+        result = "Malicious Message" if prediction == 1 else "Safe Message"
         
         return {
             'text': text,

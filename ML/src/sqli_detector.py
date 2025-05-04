@@ -212,7 +212,7 @@ class SQLiDetector:
         probabilities = self.ensemble.predict_proba(text_tfidf)[0]
         
         # Determine result
-        result = "🚨 SQL Injection" if prediction == 1 else "✅ Safe Query"
+        result = "SQL Injection" if prediction == 1 else "Safe Query"
         
         return {
             'text': text,
