@@ -370,12 +370,14 @@ def main():
         print(f"- Malicious: {result['probabilities']['malicious']}")
     
     # Evaluate performance and show confusion matrix
-    save_dir = SCRIPT_DIR / "models" / "metrics"
+    save_dir = SCRIPT_DIR / "models" / "sms_metrics"
     performance_metrics = detector.evaluate_performance(X_test, y_test, save_dir)
     print("\nModel Performance Metrics:")
-    for metric, value in performance_metrics['metrics'].items():
-        print(f"{metric.capitalize()}: {value:.3f}")
-    print(f"\nPerformance metrics saved to: {performance_metrics['plot_base64']}")
+    print(performance_metrics)
+    
+    # for metric, value in performance_metrics['metrics'].items():
+    #     print(f"{metric.capitalize()}: {value:.3f}")
+    # print(f"\nPerformance metrics saved to: {performance_metrics['plot_base64']}")
 
 if __name__ == "__main__":
     main()

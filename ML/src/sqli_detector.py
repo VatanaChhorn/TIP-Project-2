@@ -163,18 +163,24 @@ class SQLiDetector:
         print(f"Model loaded successfully from {model_path}")
 
 def main():
-    # Initialize detector
+    # # Initialize detector
+    # detector = SQLiDetector()
+    
+    # # Load and prepare data
+    # data = detector.load_and_prepare_data()
+    
+    # # Train models
+    # X_test, y_test = detector.train_models(data)
+    
+    # # Save the model
+    # model_path = Path(__file__).parent / "models" / "sqli_detector_model.pkl"
+    # detector.save_model(model_path)
+    
+    # Load the model
+    model_path = Path(__file__).parent.parent / "models" / "sqli" / "sqli_detector_model.pkl"
+    print(model_path)
     detector = SQLiDetector()
-    
-    # Load and prepare data
-    data = detector.load_and_prepare_data()
-    
-    # Train models
-    X_test, y_test = detector.train_models(data)
-    
-    # Save the model
-    model_path = Path(__file__).parent / "models" / "sqli_detector_model.pkl"
-    detector.save_model(model_path)
+    detector.load_model(model_path)
     
     # Example predictions
     test_texts = [
