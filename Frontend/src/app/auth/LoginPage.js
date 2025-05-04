@@ -11,16 +11,106 @@ import {
   Link,
   IconButton,
   InputAdornment,
+  Alert,
+  CircularProgress,
 } from "@mui/material";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import { useNavigate } from "react-router-dom";
 
 function LoginPage() {
-  // ========== 🔧 functions ==========
+  // ========== 🔧 state management ==========
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+    rememberMe: false
+  });
+  const [errors, setErrors] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [apiError, setApiError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
+  // ========== 🔧 functions ==========
   const handleTogglePassword = () => {
     setShowPassword((prev) => !prev);
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: name === 'rememberMe' ? checked : value
+    }));
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Invalid email format';
+    }
+    
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setApiError("");
+    
+    if (!validateForm()) {
+      return;
+    }
+    
+    setIsLoading(true);
+    try {
+      const response = await fetch('http://localhost:5001/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Login failed');
+      }
+      
+      // Store tokens and user data
+      localStorage.setItem('access_token', data.access_token);
+      localStorage.setItem('refresh_token', data.refresh_token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      
+      // Trigger a storage event for Navbar to detect
+      window.dispatchEvent(new Event('storage'));
+      
+      // Login successful - redirect to appropriate dashboard
+      if (data.user.is_admin) {
+        navigate('/admin');
+      } else {
+        navigate('/');
+      }
+    } catch (error) {
+      setApiError(error.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // ========== 🎨 views ==========
@@ -33,7 +123,7 @@ function LoginPage() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        height: "100vh", // 🧱 full height like right side,
+        height: "100vh",
         width: "50%",
       }}
     >
@@ -45,39 +135,71 @@ function LoginPage() {
           Please login to continue to your account.
         </Typography>
 
-        <TextField
-          label="Email"
-          type="email"
-          fullWidth
-          margin="normal"
-          defaultValue="example@test.com"
-        />
+        {apiError && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {apiError}
+          </Alert>
+        )}
 
-        <TextField
-          label="Password"
-          type={showPassword ? "text" : "password"}
-          fullWidth
-          margin="normal"
-          InputProps={{
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton onClick={handleTogglePassword} edge="end">
-                  {showPassword ? <VisibilityOff /> : <Visibility />}
-                </IconButton>
-              </InputAdornment>
-            ),
-          }}
-        />
+        <form onSubmit={handleSubmit}>
+          <TextField
+            label="Email"
+            name="email"
+            type="email"
+            fullWidth
+            margin="normal"
+            value={formData.email}
+            onChange={handleInputChange}
+            error={!!errors.email}
+            helperText={errors.email}
+          />
 
-        <FormControlLabel control={<Checkbox />} label="Keep me logged in" />
+          <TextField
+            label="Password"
+            name="password"
+            type={showPassword ? "text" : "password"}
+            fullWidth
+            margin="normal"
+            value={formData.password}
+            onChange={handleInputChange}
+            error={!!errors.password}
+            helperText={errors.password}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton onClick={handleTogglePassword} edge="end">
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+          />
 
-        <Button fullWidth variant="contained" sx={{ mt: 2, mb: 2 }}>
-          Sign in
-        </Button>
+          <FormControlLabel 
+            control={
+              <Checkbox 
+                name="rememberMe"
+                checked={formData.rememberMe}
+                onChange={handleInputChange}
+              />
+            } 
+            label="Keep me logged in" 
+          />
+
+          <Button 
+            type="submit"
+            fullWidth 
+            variant="contained" 
+            sx={{ mt: 2, mb: 2 }}
+            disabled={isLoading}
+          >
+            {isLoading ? <CircularProgress size={24} /> : 'Sign in'}
+          </Button>
+        </form>
 
         <Typography variant="body2" align="center">
           Need an account?{" "}
-          <Link href="#" underline="hover">
+          <Link href="/auth/register" underline="hover">
             Create one
           </Link>
         </Typography>
@@ -95,7 +217,7 @@ function LoginPage() {
         alignItems: "center",
         justifyContent: "center",
         flexDirection: "column",
-        height: "100vh", // 🧱 match left side height,
+        height: "100vh",
         width: "50%",
         p: 4,
       }}
@@ -108,21 +230,21 @@ function LoginPage() {
           alignItems: "center",
           justifyContent: "center",
           flexDirection: "column",
-          height: "80vh", // 🧱 match left side height,
+          height: "80vh",
           width: "100%",
           borderRadius: 5,
           p: 4,
         }}
       >
         <img
-          src="/illustration.png"
-          alt="Phishing Detection"
-          style={{ width: "300px", marginBottom: "2rem" }}
+          src="/login.png"
+          alt="Malicious Detection"
+          style={{ width: "500px", marginBottom: "2rem" }}
         />
         <Typography variant="h5" fontWeight="bold">
-          Phishing Detection.
+        Malicious Detection.
         </Typography>
-        <Typography variant="subtitle1">That Doesn’t Suck!</Typography>
+        <Typography variant="subtitle1">That Doesn't Suck!</Typography>
       </Grid>
     </Grid>
   );

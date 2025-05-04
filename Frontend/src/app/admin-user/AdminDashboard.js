@@ -17,7 +17,7 @@ const usageData = [
   { month: "January", usage: 1 },
   { month: "February", usage: 3 },
   { month: "March", usage: 4 },
-  { month: "April", usage: 4 },
+  { month: "April", usage: 8 },
 ];
 
 const detectionsData = [
@@ -105,13 +105,13 @@ function AdminDashboard() {
           {/* Phishing Prediction Card */}
           <Paper elevation={0} sx={{ background: "#23272e", borderRadius: 4, p: 3, flex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
             <Typography variant="h6" sx={{ color: "#fff", fontWeight: 600, alignSelf: "flex-start" }}>
-              Phishing Prediction
+              Malicious Attack Prediction
             </Typography>
             <Typography variant="body2" sx={{ color: "#bdbdbd", alignSelf: "flex-start", mb: 2 }}>
-              Insights into your phishing prediction
+              Insights into your prediction
             </Typography>
             <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: 24, textAlign: "center", mt: 4 }}>
-              80% of suspicious SMS & Emails contain a <br /> URL
+              80% of suspicious contain an <br /> attack
             </Typography>
           </Paper>
         </Stack>
