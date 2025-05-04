@@ -32,7 +32,7 @@ function SubmittedContentAccordion({ content, endpoint }) {
   return (
     <Accordion defaultExpanded sx={{ mb: 3, background: '#f3f4f6', boxShadow: 'none', borderRadius: 2 }}>
       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-        <Typography variant="subtitle1">Show Submitted Content</Typography>
+        <Typography variant="subtitle1">Submitted Content</Typography>
       </AccordionSummary>
       <AccordionDetails>
         {loading ? (

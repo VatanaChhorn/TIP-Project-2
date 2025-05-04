@@ -62,10 +62,11 @@ function SeverityBox({ severity = "high", probability = 0.7, endpoint, classific
   }, [endpoint]);
 
   // Use fetched data if available, otherwise use props
-  const effectiveSeverity = data?.severity || severity;
-  const effectiveProbability = data?.probability ?? probability;
-  const effectiveClassification = data?.classification || classification ;
-  const config = severityConfig[effectiveSeverity] || severityConfig.low;
+  const effectiveSeverity = severity;
+  const effectiveProbability = probability;
+  const effectiveClassification = classification ;
+  const mappedSeverity = probability > 0.8 ? "high" : probability > 0.4 ? "medium" : "low";
+  const config = severityConfig[mappedSeverity]
 
   if (loading) {
     return (
@@ -109,7 +110,7 @@ function SeverityBox({ severity = "high", probability = 0.7, endpoint, classific
       <Paper
         elevation={0}
         sx={{
-          background: effectiveSeverity === "low" ? "#7ee89b" : effectiveSeverity === "medium" ? "#fff9c4" : "#f87171",
+          background: mappedSeverity === "low" ? "#7ee89b" : mappedSeverity === "medium" ? "#fff9c4" : "#f87171",
           borderRadius: 2,
           p: 2,
           mb: 2,
