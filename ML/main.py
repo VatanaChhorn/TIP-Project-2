@@ -68,6 +68,11 @@ class MLDetectionSystem:
                 elif attack_type == "phishing":
                     prediction = self.process_sms_samples(pd.DataFrame([row]))
                     model_name = "PHISHING/SMS SCAM DETECTION"
+                    # Add potential spam detection
+                    if prediction and 'probabilities' in prediction[0]:
+                        prob = prediction[0]['probabilities'].get('malicious', 0)
+                        if 0.4 <= prob <= 0.6:
+                            prediction[0]['prediction'] = "⚠️ Potential Malicious Message"
                 elif attack_type == "ddos":
                     prediction = self.process_ddos_samples(pd.DataFrame([row]))
                     model_name = "DDoS ATTACK PREDICTION"
