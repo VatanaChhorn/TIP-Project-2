@@ -30,11 +30,11 @@ function App() {
           <Route path="/auth/login" element={<LoginPage />} />
       <Route path="/auth/register" element={<SignupPage />} />
 
-     
+      <Route path="/dashboard" element={<UserDashboard />} />
       <Route path="/scan-history" element={<UserScanHistory />} />
       <Route path="/detection-result" element={<DetectionResultPage />} />
 
-      <Route path="/admin/dashboard" element={<UserDashboard />} />
+
       <Route path="/admin" element={<AdminDashboard />} />
       <Route path="/admin/analytics" element={<AdminAnalyticsDashboard />} />
 

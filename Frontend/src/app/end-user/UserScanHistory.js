@@ -13,7 +13,6 @@ import {
   Chip,
 } from "@mui/material";
 import Navbar from "../Navbar";
-import AdminNavbar from "../admin-user/AdminNavbar";
 
 const scanResults = [
   {
@@ -37,13 +36,12 @@ export default function ScanHistory() {
     <Box sx={{ minHeight: "100vh", background: "#fafbfc" }}>
       <Navbar />
       <Box sx={{ height: 16 }} />
-      <AdminNavbar tab={tab} setTab={setTab} />
       {/* Scan History Table Section */}
       <Box sx={{ maxWidth: 1200, mx: "auto", mt: 6 }}>
         <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
           <Button variant="contained" sx={{ borderRadius: 2, fontWeight: 500, px: 3 }}>
             Export
-          </Button>
+          </Button>yes
         </Box>
         <TableContainer component={Paper} sx={{ borderRadius: 3, boxShadow: 0 }}>
           <Table>
