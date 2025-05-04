@@ -44,9 +44,6 @@ venv.bak/
 .ipynb_checkpoints
 
 # Data files
-*.csv
-*.xlsx
-*.xls
 *.db
 *.sqlite
 
@@ -82,3 +79,9 @@ nosetests.xml
 coverage.xml
 *.cover
 .hypothesis/ 
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc

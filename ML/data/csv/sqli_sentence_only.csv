@@ -1,0 +1,11 @@
+sentence
+' OR '1'='1
+admin' --
+'; DROP TABLE users; --
+"' UNION SELECT username, password FROM users --"
+' OR 1=1; --
+SELECT * FROM products WHERE category = 'electronics'
+"INSERT INTO users (name, email) VALUES ('John', 'john@email.com')"
+UPDATE orders SET status = 'shipped' WHERE order_id = 12345
+DELETE FROM cart WHERE user_id = 789
+SELECT COUNT(*) FROM customers WHERE country = 'USA'

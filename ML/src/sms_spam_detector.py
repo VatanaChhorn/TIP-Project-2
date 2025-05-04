@@ -375,7 +375,7 @@ def main():
     print("\nModel Performance Metrics:")
     for metric, value in performance_metrics['metrics'].items():
         print(f"{metric.capitalize()}: {value:.3f}")
-    # print(f"\nPerformance metrics saved to: {performance_metrics['plot_base64']}")
+    print(f"\nPerformance metrics saved to: {performance_metrics['plot_base64']}")
 
 if __name__ == "__main__":
     main()
