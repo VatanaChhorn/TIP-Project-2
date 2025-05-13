@@ -41,7 +41,7 @@ export default function ScanHistory() {
         <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
           <Button variant="contained" sx={{ borderRadius: 2, fontWeight: 500, px: 3 }}>
             Export
-          </Button>yes
+          </Button>
         </Box>
         <TableContainer component={Paper} sx={{ borderRadius: 3, boxShadow: 0 }}>
           <Table>

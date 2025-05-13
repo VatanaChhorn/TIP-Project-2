@@ -1,0 +1,27 @@
+{
+  "total_scans": 1250,
+  "usage_by_day": [
+    { "date": "2023-05-01", "count": 120 },
+    { "date": "2023-05-02", "count": 145 },
+    { "date": "2023-05-03", "count": 190 },
+    { "date": "2023-05-04", "count": 210 },
+    { "date": "2023-05-05", "count": 185 },
+    { "date": "2023-05-06", "count": 155 },
+    { "date": "2023-05-07", "count": 245 }
+  ],
+  "detection_counts": {
+    "counts": {
+      "ddos": 350,
+      "phishing": 275,
+      "sqli": 225,
+      "ham": 400
+    },
+    "percentages": {
+      "ddos": 28.0,
+      "phishing": 22.0,
+      "sqli": 18.0,
+      "ham": 32.0
+    },
+    "total": 1250
+  }
+} 

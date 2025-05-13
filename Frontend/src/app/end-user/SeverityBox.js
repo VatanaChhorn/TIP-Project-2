@@ -1,6 +1,14 @@
+// SeverityBox.js
+// This component displays a summary card showing the risk/severity of a detection result.
+// It uses the severity, probability, and classification props to determine the color, label, and risk indicator.
+// The severity is mapped from the probability (high, medium, low) and controls the color and label.
+// The probability is shown as a percentage, and the classification is shown as the main label.
+// The component is used in DetectionResultPage to show the risk for the selected row.
+
 import React, { useEffect, useState } from "react";
 import { Box, Typography, Paper, CircularProgress, Alert } from "@mui/material";
 
+// Configuration for severity levels: color, label, description, and indicator colors
 const severityConfig = {
   low: {
     color: "#5fd17a",
@@ -34,11 +42,18 @@ const severityConfig = {
   },
 };
 
+// SeverityBox component
+// Props:
+//   severity: string ("high", "medium", "low")
+//   probability: number (0-1, likelihood of malicious)
+//   classification: string (e.g., "Phishing", "SQLi", etc.)
+//   children: any (optional, for extra content)
 function SeverityBox({ severity = "high", probability = 0.7, classification = "Phishing", children }) {
   // Use fetched data if available, otherwise use props
   const effectiveSeverity = severity;
   const effectiveProbability = probability;
   const effectiveClassification = classification ;
+  // Map probability to severity: >0.8 = high, >0.4 = medium, else low
   const mappedSeverity = probability > 0.8 ? "high" : probability > 0.4 ? "medium" : "low";
   const config = severityConfig[mappedSeverity]
 
@@ -54,12 +69,14 @@ function SeverityBox({ severity = "high", probability = 0.7, classification = "P
         transition: "background 0.3s",
       }}
     >
+      {/* Main label */}
       <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
         Identified as
       </Typography>
       <Typography variant="h3" sx={{ fontWeight: 900, mb: 2 }}>
         {effectiveClassification}
       </Typography>
+      {/* Threat level and probability */}
       <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
         Threat Level: <Box component="span" sx={{ fontWeight: 900 }}>{config.label}</Box>
       </Typography>
@@ -87,6 +104,7 @@ function SeverityBox({ severity = "high", probability = 0.7, classification = "P
           </Box>
         ))}
       </Paper>
+      {/* Render any children passed to the component */}
       {children}
     </Paper>
   );

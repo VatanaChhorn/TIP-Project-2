@@ -1,4 +1,8 @@
-import React, { useState } from "react";
+// LandingPage.js
+// This is the main user-facing page for uploading files, running ML scans, and viewing results and model metrics.
+// It includes detailed logic for mapping between data labels, display labels, and backend model endpoints.
+
+import React, { useState, useEffect } from "react";
 import {
   Typography,
   Button,
@@ -23,45 +27,67 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DeleteIcon from '@mui/icons-material/Delete';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { useNavigate } from "react-router-dom";
+import DetectionResultPage from './DetectionResultPage';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
 
 function LandingPage() {
+  // =====================
+  // State Management
+  // =====================
+  // File selected by the user for upload
   const [file, setFile] = useState(null);
+  // Error message to display to the user
   const [error, setError] = useState("");
+  // Scan result object returned from backend
   const [result, setResult] = useState(null);
+  // Metrics object for the main model type (used for initial metrics display)
+  const [metrics, setMetrics] = useState(null);
+  // Dialog state for showing metrics for a specific attack type
+  const [metricsDialogOpen, setMetricsDialogOpen] = useState(false);
+  // Which attack type's metrics are being shown in the dialog
+  const [metricsDialogLabel, setMetricsDialogLabel] = useState(null);
+  // The actual metrics data for the dialog (fetched on demand)
+  const [metricsDialogMetrics, setMetricsDialogMetrics] = useState(null);
+  // For navigation to detailed result pages
+  const navigate = useNavigate();
 
+  // =====================
+  // File Upload Handling
+  // =====================
+  // Handles file selection and validation (type and size)
   const handleFileUpload = (event) => {
     const uploadedFile = event.target.files[0];
-    
-    // Reset error state
-    setError("");
-
-    // Validate file
-    if (!uploadedFile) {
-      return;
-    }
-
-    // Check file type (add more types as needed)
+    setError(""); // Clear any previous error
+    if (!uploadedFile) return;
+    // Only allow CSV files (MIME type check)
     const allowedTypes = ['text/csv'];
     if (!allowedTypes.includes(uploadedFile.type)) {
       setError("Invalid file type. Please upload a CSV file.");
       return;
     }
-
-    // Check file size (5MB limit)
+    // Limit file size to 5MB for performance and backend safety
     if (uploadedFile.size > 5 * 1024 * 1024) {
       setError("File is too large. Maximum size is 5MB.");
       return;
     }
-
     setFile(uploadedFile);
   };
 
+  // Clears all state, resetting the page to its initial state
   const handleClear = () => {
     setFile(null);
     setError("");
     setResult(null);
+    setMetrics(null);
   };
 
+  // =====================
+  // Scan and Metrics Fetching
+  // =====================
+  // Handles the scan process: uploads file, gets results, fetches metrics for the main model type
   const handleScan = async () => {
     if (!file) {
       setError("Please upload a file first");
@@ -69,9 +95,11 @@ function LandingPage() {
     }
     setError("");
     setResult(null);
+    setMetrics(null);
     const formData = new FormData();
     formData.append("file", file);
     try {
+      // Send file to backend for ML processing
       const response = await fetch("http://127.0.0.1:5001/api/ml/process", {
         method: "POST",
         body: formData,
@@ -80,11 +108,37 @@ function LandingPage() {
         throw new Error("Failed to process file");
       }
       const data = await response.json();
-      console.log('ML API response:', data);
+      console.log('ML API response:', data); // Debug: see backend response
       setResult(data);
+      localStorage.setItem('scanResults', JSON.stringify(data));
+      // Fetch metrics for the main model type (based on the first result's model_name)
+      // This assumes the first result is representative of the main model used
+      const modelType = getModelType(data.results?.[0]?.model_name);
+      console.log('Fetching metrics for modelType:', modelType);
+      try {
+        // Request metrics images from backend for this model type
+        const imgRes = await fetch(`http://127.0.0.1:5001/api/ml/metrics/${modelType}`);
+        const imgData = await imgRes.json();
+        console.log('Metric image data:', imgData);
+        setMetrics(imgData); // Store the full metrics object
+      } catch (e) {
+        setMetrics(null); // If metrics fetch fails, clear metrics
+      }
     } catch (err) {
-      setError(err.message);
+      setError(err.message); // Show error to user
     }
+  };
+
+  const columnLabels = {
+    index: "No.",
+    text: "Submitted Content",
+    predicted_label: "Predicted Label",
+    prediction: "Prediction",
+    malicious: "Malicious",
+    safe: "Safe",
+    probabilities: "All Probabilities",
+    confidence: "Confidence",
+    // Add more as needed
   };
 
   // Helper to flatten result item for table display
@@ -96,6 +150,7 @@ function LandingPage() {
       const probs = item.prediction.probabilities || {};
       row = {
         index: item.row_index,
+        model_name: item.model_name,
         text: isDDOS && item.prediction.input && item.prediction.input["Flow ID"]
           ? item.prediction.input["Flow ID"]
           : item.prediction.text,
@@ -104,6 +159,7 @@ function LandingPage() {
         malicious: probs.malicious,
         safe: probs.safe,
         probabilities: item.prediction.probabilities,
+        predictionObj: item.prediction,
       };
     }
     if (item.classification) {
@@ -144,22 +200,27 @@ function LandingPage() {
         Object.keys(row).forEach((k) => cols.add(k));
         return cols;
       }, new Set())
-    );
+    ).filter(col => col !== 'model_name'&& col !== 'predictionObj');
     return (
       <TableContainer component={Paper} sx={{ mt: 3 }}>
         <Table>
           <TableHead>
             <TableRow>
               {columns.map((col) => (
-                <TableCell key={col} sx={{ fontWeight: "bold", textAlign: "center", textTransform: "capitalize" }}>{col}</TableCell>
+                <TableCell key={col} sx={{ fontWeight: "bold", textAlign: "center", textTransform: "capitalize" }}>{columnLabels[col]}</TableCell>
               ))}
             </TableRow>
           </TableHead>
           <TableBody>
             {rows.map((row, idx) => (
-              <TableRow key={idx}>
+              <TableRow
+                key={idx}
+                hover
+                sx={{ cursor: "pointer" }}
+                onClick={() => navigate(`/detection-result/${row.index}`, { state: row })}
+              >
                 {columns.map((col) => (
-                  <TableCell key={col}>
+                  <TableCell key={col} sx={{ textAlign: "center" }}>
                     {col === 'index'
                       ? idx + 1
                       : col === 'probabilities'
@@ -181,17 +242,20 @@ function LandingPage() {
     );
   };
 
-  // Grouping function for attack types
+  // Groups scan results by attack type label for display in accordions
+  // This allows each attack type to have its own expandable section
   function groupByAttackLabel(results) {
     const groups = {};
     results.forEach(item => {
       let label = '';
+      // Prefer attack_type from prediction input if available (most explicit)
       if (item.prediction && item.prediction.input?.attack_type) {
         label = item.prediction.input.attack_type;
       } else if (item.classification && item.classification.prediction) {
+        // Fallback: use classification prediction
         label = item.classification.prediction;
       } else {
-        label = 'Unknown';
+        label = 'Unknown'; // Fallback for missing data
       }
       if (!groups[label]) groups[label] = [];
       groups[label].push(item);
@@ -199,22 +263,54 @@ function LandingPage() {
     return groups;
   }
 
-  // Label mapping function
+  // Maps raw attack type labels to user-friendly display labels
+  // Ensures that 'spam', 'phishing', and 'smishing' are all shown as 'Phishing', etc.
+  // This is important for consistent UI and user understanding
   function getDisplayLabel(label) {
-    if (label.toLowerCase() === "spam") return "Phishing";
+    if (label.toLowerCase() === "spam" || label.toLowerCase() === "phishing" || label.toLowerCase() === "smishing") return "Phishing";
     if (label.toLowerCase() === "sqli") return "SQLi";
     if (label.toLowerCase() === "ddos") return "DDOS";
-    // Add more mappings as needed
+    // Add more mappings as needed for new attack types
     return label.charAt(0).toUpperCase() + label.slice(1);
   }
 
+  // Maps a model name or label to the backend endpoint string for metrics
+  // This is critical: it must match the backend's expected model type keys
+  // 'phishing', 'smish', or 'spam' -> 'sms' (for phishing metrics)
+  // 'ddos' -> 'ddos', 'sql' -> 'sqli'
+  // If the label is not recognized, returns 'null' to prevent invalid requests
+  function getModelType(modelName) {
+    if (!modelName) return 'null';
+    const name = modelName.toLowerCase();
+    // This line is crucial for mapping 'spam' (as in your dataset) to the correct backend endpoint
+    if (name.includes('phishing') || name.includes('smish') || name.includes('spam')) return 'sms';
+    if (name.includes('ddos')) return 'ddos';
+    if (name.includes('sql')) return 'sqli';
+    return 'null';
+  }
+
+  // =====================
+  // Effect: Load Cached Results
+  // =====================
+  // On mount, load cached scan results if available (for persistence across reloads)
+  useEffect(() => {
+    if (!result) {
+      const cached = localStorage.getItem('scanResults');
+      if (cached) setResult(JSON.parse(cached));
+    }
+  }, []);
+
+  // =====================
+  // Main Render
+  // =====================
   return (
     <Box sx={{ minHeight: "100vh", background: "#fafbfc" }}>
       <Navbar />
       <Box sx={{ height: 16 }} />
-      {/* Main Content */}
+      {/* Main Content: Upload, Scan, Results, Metrics Dialog */}
       <Container maxWidth="xl" sx={{ mt: 8, mb: 4 }}>
         <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+          {/* Header and instructions */}
           <Chip
             label="MALICIOUS ATTACK DETECTION"
             color="primary"
@@ -240,12 +336,14 @@ function LandingPage() {
             Detect, analyze, and act—before damage is done.
           </Typography>
 
+          {/* Error message display (if any) */}
           {error && (
             <Alert severity="error" sx={{ mb: 2, width: "100%" }}>
               {error}
             </Alert>
           )}
 
+          {/* File upload area: shows either upload prompt or file preview */}
           <Paper 
             elevation={0} 
             sx={{ 
@@ -266,11 +364,11 @@ function LandingPage() {
               id="file-upload"
               style={{ display: 'none' }}
               onChange={handleFileUpload}
-              accept=".txt,.html,.pdf,.json"
+              accept=".csv"
             />
             
+            {/* Upload prompt (shown if no file is selected) */}
             {!file ? (
-              // Upload prompt
               <Box
                 component="label"
                 htmlFor="file-upload"
@@ -290,7 +388,7 @@ function LandingPage() {
                 </Typography>
               </Box>
             ) : (
-              // File preview
+              // File preview (shown if a file is selected)
               <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                   <InsertDriveFileIcon sx={{ fontSize: 40, color: 'primary.main' }} />
@@ -310,6 +408,7 @@ function LandingPage() {
             )}
           </Paper>
 
+          {/* Scan and Clear buttons */}
           <Box sx={{ display: "flex", gap: 2, width: "100%", justifyContent: "center" }}>
             <Button 
               variant="contained" 
@@ -325,29 +424,87 @@ function LandingPage() {
               color="primary" 
               sx={{ px: 6, borderRadius: 2 }}
               onClick={handleClear}
-              disabled={!file}
             >
               Clear
             </Button>
           </Box>
 
-          {/* Results Table(s) */}
+          {/* Results Table(s) and Accordions for each attack type */}
           <Box sx={{ width: "100%", maxWidth: 1200, mx: "auto", mt:2 }}>
             {result && result.results && Object.entries(groupByAttackLabel(result.results)).map(([label, items]) => (
               <Accordion key={label} sx={{ mb: 2, width: "100%" }}>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ display: 'flex', alignItems: 'center' }}>
                   <Typography variant="h6">{getDisplayLabel(label)} Attacks</Typography>
+                  {/* Details button: fetches and displays metrics for this attack type */}
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    sx={{ marginLeft: 'auto' }}
+                    onClick={async e => {
+                      e.stopPropagation(); // Prevent accordion toggle
+                      setMetricsDialogLabel(label); // Set which label's metrics to show
+                      const modelType = getModelType(label); // Map label to backend endpoint
+                      if (modelType === 'null') {
+                        setMetricsDialogMetrics({ error: 'No metrics available for this attack type.' });
+                        setMetricsDialogOpen(true);
+                        return;
+                      }
+                      setMetricsDialogOpen(true);
+                      try {
+                        // Fetch metrics for this attack type from backend
+                        const imgRes = await fetch(`http://127.0.0.1:5001/api/ml/metrics/${modelType}`);
+                        const imgData = await imgRes.json();
+                        setMetricsDialogMetrics(imgData);
+                      } catch (err) {
+                        setMetricsDialogMetrics({ error: 'Failed to fetch metrics.' });
+                      }
+                    }}
+                  >
+                    Details
+                  </Button>
                 </AccordionSummary>
                 <AccordionDetails>
+                  {/* Render the results table for this attack type */}
                   {renderTable(items)}
                 </AccordionDetails>
               </Accordion>
             ))}
+            {/* Model Metrics Dialog: shows images or error for selected attack type */}
+            <Dialog open={metricsDialogOpen} onClose={() => { setMetricsDialogOpen(false); setMetricsDialogMetrics(null); }} maxWidth="md" fullWidth>
+  <DialogTitle>Model Metrics - {metricsDialogLabel && getDisplayLabel(metricsDialogLabel)}</DialogTitle>
+  <DialogContent>
+    {metricsDialogMetrics && Object.entries(metricsDialogMetrics).length > 0 ? (
+      Object.entries(metricsDialogMetrics).map(([key, value]) => {
+        // If the key is 'error' or the value is not a valid base64 image, show as error text
+        if (key === 'error' || typeof value !== 'string' || !value.startsWith('iVBORw0KGgo')) {
+          return (
+            <Typography key={key} color="error" sx={{ mb: 2 }}>
+              {typeof value === 'string' ? value : 'No metrics available for this model type.'}
+            </Typography>
+          );
+        }
+        // Otherwise, render the image
+        return (
+          <Box key={key} sx={{ mb: 2, textAlign: 'center' }}>
+            <Typography variant="subtitle1" sx={{ textTransform: 'capitalize' }}>{key.replace(/_/g, ' ')}</Typography>
+            <img src={`data:image/png;base64,${value}`} alt={key} style={{ maxWidth: '100%' }} />
+          </Box>
+        );
+      })
+    ) : (
+      <Typography color="text.secondary">No metrics available for this model type.</Typography>
+    )}
+  </DialogContent>
+</Dialog>
           </Box>
         </Box>
       </Container>
     </Box>
   );
 }
+
+// This page is the main entry point for end users to scan files and view ML model results and metrics.
+// The mapping logic ensures that labels like 'spam' are treated as phishing, and that the correct backend endpoint is used for metrics.
+// If you add new attack types or models, update the mapping functions accordingly.
 
 export default LandingPage; 

@@ -16,9 +16,8 @@ function AdminNavbar({ tab, setTab }) {
       setTab(newValue);
       // Define your routes for each tab index
       if (newValue === 0) navigate("/admin");
-      if (newValue === 1) navigate("/admin/analytics");
-      if (newValue === 2) navigate("/dashboard");
-      if (newValue === 3) navigate("/profile");
+      if (newValue === 1) navigate("/dashboard");
+      if (newValue === 2) navigate("/profile");
     };
 
     const location = useLocation();
@@ -26,9 +25,8 @@ function AdminNavbar({ tab, setTab }) {
 useEffect(() => {
   // Map the current path to the correct tab index
   if (location.pathname === "/admin") setTab(0);
-  else if (location.pathname === "/admin/analytics") setTab(1);
-  else if (location.pathname === "/dashboard") setTab(2);
-  else if (location.pathname === "/profile") setTab(3);
+  else if (location.pathname === "/dashboard") setTab(1);
+  else if (location.pathname === "/profile") setTab(2);
 }, [location.pathname, setTab]);
 
   return (
@@ -56,9 +54,8 @@ useEffect(() => {
           slotProps={{ indicator: { style: { background: "#222" } } }}
         >
           <Tab icon={<HomeIcon />} iconPosition="start" label="Analytics" sx={{ minHeight: 0, fontWeight: 600, color: tab === 0 ? "#222" : "#555", background: tab === 0 ? "#fffde7" : "transparent", borderRadius: 2, mx: 1 }} />
-          <Tab icon={<AssessmentIcon />} iconPosition="start" label="User Analytics" sx={{ minHeight: 0, fontWeight: 600, color: tab === 1 ? "#222" : "#555", background: tab === 1 ? "#fffde7" : "transparent", borderRadius: 2, mx: 1 }} />
-          <Tab icon={<RecentActorsIcon />} iconPosition="start" label="User" sx={{ minHeight: 0, fontWeight: 600, color: tab === 2 ? "#222" : "#555", background: tab === 2 ? "#fffde7" : "transparent", borderRadius: 2, mx: 1 }} />
-          <Tab icon={<PersonIcon />} iconPosition="start" label="Profile" sx={{ minHeight: 0, fontWeight: 600, color: tab === 3 ? "#222" : "#555", background: tab === 3 ? "#fffde7" : "transparent", borderRadius: 2, mx: 1 }} />
+          <Tab icon={<RecentActorsIcon />} iconPosition="start" label="User" sx={{ minHeight: 0, fontWeight: 600, color: tab === 1 ? "#222" : "#555", background: tab === 1 ? "#fffde7" : "transparent", borderRadius: 2, mx: 1 }} />
+          <Tab icon={<PersonIcon />} iconPosition="start" label="Profile" sx={{ minHeight: 0, fontWeight: 600, color: tab === 2 ? "#222" : "#555", background: tab === 2 ? "#fffde7" : "transparent", borderRadius: 2, mx: 1 }} />
         </Tabs>
       </Box>
   );

@@ -1,4 +1,11 @@
-import React, { useState } from "react";
+// DetectionResultPage.js
+// This page displays detailed information about a single detection result row.
+// It fetches the scan results from localStorage and finds the row by rowIndex from the URL.
+// The row data is then passed to child components (SubmittedContentAccordion, SeverityBox, etc.) for display.
+// The page is robust to refreshes and direct links, as it does not rely on navigation state.
+
+import React from "react";
+import { useLocation, useParams } from "react-router-dom";
 import {
   Box,
   Typography,
@@ -190,6 +197,7 @@ const DETECTION_RESULTS = {
 };
 
 const DDoSDetails = ({ input }) => {
+  const safeInput = input || {};
   return (
     <Accordion
       sx={{
@@ -267,7 +275,7 @@ const DDoSDetails = ({ input }) => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {Object.entries(input).map(([key, value]) => (
+              {Object.entries(input || {}).map(([key, value]) => (
                 <TableRow
                   key={key}
                   sx={{
@@ -304,20 +312,20 @@ const DDoSDetails = ({ input }) => {
   );
 };
 
-const ModelSwitcher = ({ currentModel, onModelChange }) => (
-  <FormControl fullWidth sx={{ mb: 3 }}>
-    <InputLabel>Detection Model</InputLabel>
-    <Select
-      value={currentModel}
-      label="Detection Model"
-      onChange={(e) => onModelChange(e.target.value)}
-    >
-      <MenuItem value="phishing">Phishing/SMS Scam Detection</MenuItem>
-      <MenuItem value="sqli">SQL Injection Detection</MenuItem>
-      <MenuItem value="ddos">DDoS Attack Detection</MenuItem>
-    </Select>
-  </FormControl>
-);
+// const ModelSwitcher = ({ currentModel, onModelChange }) => (
+//   <FormControl fullWidth sx={{ mb: 3 }}>
+//     <InputLabel>Detection Model</InputLabel>
+//     <Select
+//       value={currentModel}
+//       label="Detection Model"
+//       onChange={(e) => onModelChange(e.target.value)}
+//     >
+//       <MenuItem value="phishing">Phishing/SMS Scam Detection</MenuItem>
+//       <MenuItem value="sqli">SQL Injection Detection</MenuItem>
+//       <MenuItem value="ddos">DDoS Attack Detection</MenuItem>
+//     </Select>
+//   </FormControl>
+// );
 
 const ModelInfoSection = ({ modelName, attackType }) => (
   <Box sx={{ mt: 3, pt: 2, borderTop: "1px solid #e0e0e0" }}>
@@ -432,7 +440,11 @@ const ActionButtons = () => (
 );
 
 function DetectionResultPage() {
-  const [currentModel, setCurrentModel] = useState("phishing");
+  const location = useLocation();
+  const { rowIndex } = useParams();
+  const row = location.state;
+
+  const [currentModel, setCurrentModel] = React.useState("phishing");
   const result = DETECTION_RESULTS[currentModel];
 
   const getSubmittedContent = () => {
@@ -450,35 +462,63 @@ function DetectionResultPage() {
 
   return (
     <Box sx={{ minHeight: "100vh", background: "#fafbfc" }}>
+      {/* Navbar at the top */}
       <Navbar />
-      <Box sx={{ height: 8 }} />
+      <Box sx={{ height: 16 }} />
       <Box sx={{ maxWidth: 900, mx: "auto", px: 2, py: 6 }}>
         <Typography variant="h2" sx={{ fontWeight: 800, mb: 3 }}>
           Detection Details
         </Typography>
 
-        <ModelSwitcher
+        {/* <ModelSwitcher
           currentModel={currentModel}
           onModelChange={setCurrentModel}
-        />
+        /> */}
 
-        <SubmittedContentAccordion content={getSubmittedContent()} />
+        {/* Accordion showing the submitted content (row.text) */}
+        <SubmittedContentAccordion row={row} />
 
+        {/* SeverityBox shows the risk/severity, using row data */}
         <SeverityBox
-          severity={result.classification.confidence.toLowerCase()}
-          probability={result.prediction.probabilities.malicious}
-          classification={result.prediction.prediction.toUpperCase()}
+          severity={row?.confidence || row?.classification?.confidence}
+          probability={row?.malicious}
+          classification={row?.prediction || row?.predicted_label}
         />
 
         <AnalysisSection
-          classificationProbabilities={result.classification.probabilities}
-          predictionDetails={result.prediction.probabilities}
-          modelName={result.model_name}
-          attackType={result.prediction.prediction}
-          input={result.prediction.input}
+          classificationProbabilities={row?.classification?.probabilities || row?.probabilities || {}}
+          predictionDetails={{
+            malicious: row?.malicious,
+            safe: row?.safe
+          }}
+          modelName={row?.model_name}
+          attackType={row?.prediction}
+          input={row?.predictionObj?.input}
         />
 
         <ActionButtons />
+
+        {/* Table showing all fields of the row for debugging or extra info
+        {row && (
+          <TableContainer component={Paper} sx={{ mt: 3 }}>
+            <Table>
+              <TableBody>
+                {Object.entries(row).map(([key, value]) => (
+                  <TableRow key={key}>
+                    <TableCell sx={{ fontWeight: "bold", textTransform: "capitalize" }}>{key}</TableCell>
+                    <TableCell>
+                      {typeof value === "object" && value !== null ? (
+                        <pre style={{ margin: 0 }}>{JSON.stringify(value, null, 2)}</pre>
+                      ) : (
+                        String(value)
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )} */}
       </Box>
     </Box>
   );

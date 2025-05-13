@@ -39,6 +39,7 @@ function App() {
       <Route path="/admin/analytics" element={<AdminAnalyticsDashboard />} />
 
       <Route path="/profile" element={<ProfilePage />} />
+      <Route path="/detection-result/:rowIndex" element={<DetectionResultPage />} />
       {/* Redirect any unknown routes to landing page */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
