@@ -26,8 +26,9 @@ function AdminDashboard() {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch('/dashboard_stats.json');
+        const res = await fetch('http://localhost:5001/api/dashboard/stats');
         //http://localhost:5001/api/dashboard/stats
+        ///dashboard_stats.json
         if (!res.ok) throw new Error('Failed to fetch dashboard stats');
         const data = await res.json();
         setStats(data);
@@ -99,7 +100,7 @@ function AdminDashboard() {
               Detections
             </Typography>
             <Typography variant="body2" sx={{ color: "#bdbdbd", mb: 4 }}>
-              Insights into this month's scans
+              Insights into this weekly's scans
             </Typography>
             <Box sx={{ height: 180, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column" }}>
               {loading ? (
