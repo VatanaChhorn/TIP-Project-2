@@ -13,7 +13,6 @@ logger = logging.getLogger(__name__)
 
 dashboard_bp = Blueprint("dashboard", __name__)
 
-
 def parse_json(data):
     return json.loads(json_util.dumps(data))
 

@@ -60,6 +60,11 @@ class User:
         if user_data:
             return User.from_dict(user_data)
         return None
+    
+    @staticmethod
+    def get_all_users():
+        users = mongo.db.users.find()
+        return [User.from_dict(user) for user in users]
 
     def verify_password(self, password):
         return check_password_hash(self.password, password)

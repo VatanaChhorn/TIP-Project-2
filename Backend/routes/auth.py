@@ -2,8 +2,10 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity
 from models.user import User
 from werkzeug.security import check_password_hash
+from .dashboard import get_detection_counts
 
 auth_bp = Blueprint('auth', __name__)
+
 
 @auth_bp.route('/register', methods=['POST'])
 def register():
@@ -72,3 +74,15 @@ def get_current_user():
         return jsonify({'message': 'User not found'}), 404
     
     return jsonify({'user': user.to_json()}), 200 
+
+@auth_bp.route('/userList', methods=['GET'])
+def get_user_list():
+    users = User.get_all_users()
+    user_list = []
+    for user in users:
+        totalScan = get_detection_counts(user.id)
+        count = totalScan.get("total", 0)
+        user_data = user.to_json()
+        user_data['totalScan'] = count
+        user_list.append(user_data)
+    return jsonify({'users': user_list}), 200
