@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -17,14 +17,29 @@ import {
 import Navbar from "../Navbar";
 import AdminNavbar from "../admin-user/AdminNavbar";
 
-const users = [
-  { email: "UserA@test.com", scans: 9, type: "Premium", created: "2024-03-01 19:09:17" },
-  { email: "UserB@test.com", scans: 21, type: "Free", created: "2024-03-02 20:09:17" },
-  { email: "UserC@test.com", scans: 8, type: "Free", created: "2024-03-03 21:09:17" },
-];
-
 export default function AdminUserDashboard() {
   const [tab, setTab] = useState(1); // Users tab selected by default
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    async function fetchUsers() {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch("http://127.0.0.1:5001/api/auth/userList");
+        if (!res.ok) throw new Error("Failed to fetch users");
+        const data = await res.json();
+        setUsers(data.users || []); // Use data.users as per your API response
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchUsers();
+  }, []);
 
   return (
     <Box sx={{ minHeight: "100vh", background: "#fafbfc" }}>
@@ -50,20 +65,34 @@ export default function AdminUserDashboard() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {users.map((user, idx) => (
-                <TableRow key={user.email}>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>{user.scans}</TableCell>
-                  <TableCell>
-                    {user.type === "Premium" ? (
-                      <Chip label="Premium" color="success" size="small" sx={{ bgcolor: '#e0f7fa', color: '#26a69a', fontWeight: 600 }} />
-                    ) : (
-                      <Chip label="Free" color="warning" size="small" sx={{ bgcolor: '#fff9c4', color: '#fbc02d', fontWeight: 600 }} />
-                    )}
-                  </TableCell>
-                  <TableCell>{user.created}</TableCell>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={4} align="center">Loading...</TableCell>
                 </TableRow>
-              ))}
+              ) : error ? (
+                <TableRow>
+                  <TableCell colSpan={4} align="center" style={{ color: 'red' }}>{error}</TableCell>
+                </TableRow>
+              ) : users.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={4} align="center">No users found.</TableCell>
+                </TableRow>
+              ) : (
+                users.map((user, idx) => (
+                  <TableRow key={user.email || idx}>
+                    <TableCell>{user.email}</TableCell>
+                    <TableCell>{user.totalScan}</TableCell>
+                    <TableCell>
+                      {user.is_admin ? (
+                        <Chip label="Admin" color="success" size="small" sx={{ bgcolor: '#e0f7fa', color: '#26a69a', fontWeight: 600 }} />
+                      ) : (
+                        <Chip label="User" color="warning" size="small" sx={{ bgcolor: '#fff9c4', color: '#fbc02d', fontWeight: 600 }} />
+                      )}
+                    </TableCell>
+                    <TableCell>{user.created_at}</TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </TableContainer>
