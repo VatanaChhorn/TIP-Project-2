@@ -168,8 +168,8 @@ function Navbar() {
         >
           <MenuItem onClick={() => {
             handleClose();
-            handleNavigation('/profile');
-          }}>Profile</MenuItem>
+            handleNavigation('/admin');
+          }}>Dashboard</MenuItem>
           <MenuItem onClick={handleLogout}>Logout</MenuItem>
         </Menu>
       </Box>
