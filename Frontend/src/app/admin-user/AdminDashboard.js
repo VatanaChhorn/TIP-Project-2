@@ -156,7 +156,7 @@ function AdminDashboard() {
               Total Scans Over Time
             </Typography>
             <Typography variant="body2" sx={{ color: "#bdbdbd", alignSelf: "flex-start", mb: 2 }}>
-              Line graph of total scans per day
+              Line graph of total scans per week
             </Typography>
            
             <Box sx={{ width: '100%', height: 180, mt: 2 }}>

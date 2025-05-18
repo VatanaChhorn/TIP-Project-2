@@ -20,7 +20,8 @@ import {
   TableRow,
   Accordion,
   AccordionSummary,
-  AccordionDetails
+  AccordionDetails,
+  Divider
 } from "@mui/material";
 import Navbar from "../Navbar";
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
@@ -132,11 +133,11 @@ function LandingPage() {
   const columnLabels = {
     index: "No.",
     text: "Submitted Content",
-    predicted_label: "Predicted Label",
-    prediction: "Prediction",
-    malicious: "Malicious",
+    predicted_label: "Attack Type",
+    prediction: "Subtype Label",
+    malicious: "Detection Confidence",
     safe: "Safe",
-    probabilities: "All Probabilities",
+    probabilities: "Classification Probabilities",
     confidence: "Confidence",
     // Add more as needed
   };
@@ -153,7 +154,11 @@ function LandingPage() {
         model_name: item.model_name,
         text: isDDOS && item.prediction.input && item.prediction.input["Flow ID"]
           ? item.prediction.input["Flow ID"]
-          : item.prediction.text,
+          : (item.prediction.input && item.prediction.input.sentence)
+            ? item.prediction.input.sentence
+            : (item.prediction.input && item.prediction.input.text)
+              ? item.prediction.input.text
+              : item.prediction.text,
         predicted_label: item.prediction.predicted_label,
         prediction: item.prediction.prediction,
         malicious: probs.malicious,
@@ -195,19 +200,46 @@ function LandingPage() {
   const renderTable = (result) => {
     if (!Array.isArray(result) || result.length === 0) return <div>No results</div>;
     const rows = result.map(flattenResult);
-    const columns = Array.from(
-      rows.reduce((cols, row) => {
-        Object.keys(row).forEach((k) => cols.add(k));
-        return cols;
-      }, new Set())
-    ).filter(col => col !== 'model_name'&& col !== 'predictionObj');
+    // const columns = Array.from( // this is the original way to get the columns
+    //   rows.reduce((cols, row) => {
+    //     Object.keys(row).forEach((k) => cols.add(k));
+    //     return cols;
+    //   }, new Set())
+    // ).filter(col => col !== 'model_name' && col !== 'predictionObj' && col !== 'safe');
+
+    const columns = [
+      'index',
+      'text',
+      'malicious', // Detection confidence
+      'predicted_label',
+      'prediction',
+      'probabilities',
+      'confidence'
+      // add/remove as needed
+    ];
     return (
       <TableContainer component={Paper} sx={{ mt: 3 }}>
-        <Table>
+        <Table sx={{ borderCollapse: 'separate', borderSpacing: 0 }}>
           <TableHead>
             <TableRow>
-              {columns.map((col) => (
-                <TableCell key={col} sx={{ fontWeight: "bold", textAlign: "center", textTransform: "capitalize" }}>{columnLabels[col]}</TableCell>
+              {columns.map((col, idx) => (
+                <TableCell
+                  key={col}
+                  sx={{
+                    fontWeight: "bold",
+                    textAlign: "center",
+                    textTransform: "capitalize",
+                    borderRight: idx !== columns.length - 1 ? '0.5px solid #e0e0e0' : undefined,
+                    borderBottom: '0.5px solid #e0e0e0',
+                    background: '#fafbfc',
+                    borderLeft:
+                        col === 'malicious' || col === 'probabilities'
+                          ? '1.5px solid #e0e0e0'
+                          : undefined,
+                  }}
+                >
+                  {columnLabels[col]}
+                </TableCell>
               ))}
             </TableRow>
           </TableHead>
@@ -219,19 +251,42 @@ function LandingPage() {
                 sx={{ cursor: "pointer" }}
                 onClick={() => navigate(`/detection-result/${row.index}`, { state: row })}
               >
-                {columns.map((col) => (
-                  <TableCell key={col} sx={{ textAlign: "center" }}>
+                {columns.map((col, colIdx) => (
+                  <TableCell
+                    key={col}
+                    sx={{
+                      textAlign: "center",
+                      borderRight: colIdx !== columns.length - 1 ? '0.35px solid #dcdcdc' : undefined,
+                      borderBottom: '1px solid #e0e0e0',
+                      borderLeft:
+                        col === 'malicious' || col === 'probabilities'
+                          ? '1.5px solid #e0e0e0'
+                          : undefined,
+                    }}
+                  >
                     {col === 'index'
                       ? idx + 1
-                      : col === 'probabilities'
-                        ? renderProbabilitiesTable(row[col])
-                        : typeof row[col] === "number" && ["malicious", "safe", "Ddos", "Phishing", "Sqli"].includes(col)
-                          ? (row[col] * 100).toFixed(2) + '%'
-                          : typeof row[col] === "number"
-                            ? row[col].toFixed(2)
-                            : row[col] !== undefined
-                              ? String(row[col])
-                              : ""}
+                      : col === 'malicious' ? (
+                        <Box>
+                          <Box>
+                            <Typography variant="body2" sx={{ fontWeight: 600 }}>Malicious</Typography>
+                            <Typography variant="body2">{(row.malicious * 100).toFixed(2)}%</Typography>
+                          </Box>
+                          <Divider sx={{ my: 1 }} />
+                          <Box>
+                            <Typography variant="body2" sx={{ fontWeight: 600}}>Safe</Typography>
+                            <Typography variant="body2">{(row.safe * 100).toFixed(2)}%</Typography>
+                          </Box>
+                        </Box>
+                      ) : col === 'probabilities' ? (
+                        renderProbabilitiesTable(row[col])
+                      ) : typeof row[col] === "number" && ["malicious", "Ddos", "Phishing", "Sqli"].includes(col)
+                        ? (row[col] * 100).toFixed(2) + '%'
+                        : typeof row[col] === "number"
+                          ? row[col].toFixed(2)
+                          : row[col] !== undefined
+                            ? String(row[col])
+                            : ""}
                   </TableCell>
                 ))}
               </TableRow>
